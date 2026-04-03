@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physics Wallah — GCC Strategy Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0a0a0f;--paper:#f5f2eb;--gold:#c9a84c;--gold-light:#e8d5a3;--teal:#0d7a6b;--teal-light:#e0f2ef;--red:#c94c4c;--red-light:#f2e0e0;--blue:#1a3c6e;--blue-light:#e0e8f5;--mid:#6b6860;--border:#d4cfc4;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--paper);position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:8px}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;letter-spacing:.04em;color:var(--ink)}
+.nav-logo span{color:var(--gold)}
+.nav-tabs{display:flex;gap:3px;flex-wrap:wrap}
+.nav-tab{padding:6px 11px;font-size:11px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.05em;border:1px solid transparent;border-radius:4px;cursor:pointer;background:transparent;color:var(--mid);transition:all .2s;text-transform:uppercase}
+.nav-tab:hover{color:var(--ink);background:rgba(0,0,0,.04)}
+.nav-tab.on{background:var(--ink);color:var(--paper)}
+.page{display:none;padding:36px 28px;max-width:940px;margin:0 auto;animation:fadeIn .3s ease}
+.page.on{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.hero{margin-bottom:36px}
+.hero-eyebrow{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.hero-title{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;line-height:1.1;color:var(--ink);margin-bottom:14px}
+.hero-title span{color:var(--teal)}
+.hero-sub{font-size:14px;color:var(--mid);line-height:1.7;max-width:580px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:32px}
+.kpi{border:1px solid var(--border);border-radius:8px;padding:15px 17px;background:#fff}
+.kpi-label{font-size:10px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mid);margin-bottom:7px}
+.kpi-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--ink);line-height:1}
+.kpi-val.gold{color:var(--gold)}.kpi-val.teal{color:var(--teal)}
+.kpi-sub{font-size:11px;color:var(--mid);margin-top:4px}
+.section-title{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mid);margin-bottom:14px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:18px 22px;margin-bottom:10px}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.card-sub{font-size:13px;color:var(--mid);line-height:1.6}
+.cost-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px}
+.cost-table th{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);padding:7px 10px;border-bottom:1px solid var(--border);text-align:left}
+.cost-table td{padding:9px 10px;border-bottom:1px solid #f0ece4;color:var(--ink);vertical-align:top}
+.cost-table td.amt{text-align:right;font-family:'Syne',sans-serif;font-weight:600;white-space:nowrap}
+.cost-table td.note{font-size:11px;color:var(--mid)}
+.cost-table tr.total td{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;border-top:2px solid var(--ink);border-bottom:none}
+.tag{display:inline-block;font-size:9px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px;margin-left:5px;vertical-align:middle}
+.tag-gold{background:var(--gold-light);color:#7a5c1a}.tag-teal{background:var(--teal-light);color:#0a5a4e}
+.tag-red{background:var(--red-light);color:#7a2020}.tag-blue{background:var(--blue-light);color:#1a3c6e}
+.slider-block{background:#fff;border:1px solid var(--border);border-radius:8px;padding:22px;margin-bottom:18px}
+.slider-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:nowrap}
+.slider-label{font-size:13px;color:var(--ink);min-width:185px;flex-shrink:0}
+.slider-val{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;min-width:85px;text-align:right;color:var(--teal);flex-shrink:0}
+.slider-row input[type=range]{flex:1;min-width:0;accent-color:var(--teal)}
+.result-box{background:var(--ink);border-radius:8px;padding:18px 22px;margin-top:14px;text-align:center}
+.result-label{font-size:11px;font-family:'Syne',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:5px}
+.result-val{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:var(--gold)}
+.result-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:5px}
+.scenario-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:22px}
+.scenario-card{border-radius:8px;padding:18px;border:1px solid var(--border)}
+.sc-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:7px}
+.sc-body{font-size:12px;color:var(--mid);line-height:1.6;margin-bottom:9px}
+.sc-val{font-family:'Syne',sans-serif;font-size:19px;font-weight:800}
+.bar-wrap{margin-bottom:9px}
+.bar-top{display:flex;justify-content:space-between;font-size:12px;color:var(--mid);margin-bottom:4px}
+.bar-top span:last-child{font-family:'Syne',sans-serif;font-weight:600;color:var(--ink)}
+.bar-bg{height:6px;background:#ede9df;border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px}
+.market-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
+.market-card{border-radius:8px;padding:18px;border:1px solid var(--border);background:#fff}
+.market-flag{font-size:26px;margin-bottom:7px}
+.market-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;margin-bottom:3px}
+.market-cost{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--teal);margin:7px 0}
+.market-items{font-size:12px;color:var(--mid);line-height:1.85}
+.timeline{position:relative;padding-left:26px;margin-bottom:22px}
+.timeline::before{content:'';position:absolute;left:5px;top:0;bottom:0;width:1px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:22px}
+.tl-dot{position:absolute;left:-23px;top:3px;width:11px;height:11px;border-radius:50%;background:var(--teal);border:2px solid var(--paper)}
+.tl-month{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:3px}
+.tl-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.tl-body{font-size:12px;color:var(--mid);line-height:1.6}
+.tl-cost{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--teal);margin-top:4px}
+.tl-warn{font-size:11px;font-weight:600;color:#993C1D;margin-top:3px}
+.course-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px;margin-bottom:22px}
+.course-card{border-radius:8px;padding:14px;border:1px solid var(--border);background:#fff}
+.course-rank{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin-bottom:5px}
+.course-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:5px}
+.course-body{font-size:11px;color:var(--mid);line-height:1.5;margin-bottom:7px}
+.course-price{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--teal)}
+.demand-bar{height:3px;background:#ede9df;border-radius:2px;margin-top:7px;overflow:hidden}
+.demand-fill{height:100%;border-radius:2px;background:var(--teal)}
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;margin-bottom:18px}
+.inv-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px}
+.inv-label{font-size:10px;font-family:'Syne',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mid);margin-bottom:5px}
+.inv-val{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--ink)}
+.verdict{background:var(--ink);color:var(--paper);border-radius:8px;padding:24px;margin-top:18px}
+.verdict-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--gold);margin-bottom:8px;letter-spacing:.08em;text-transform:uppercase}
+.verdict-body{font-size:14px;line-height:1.8;color:rgba(255,255,255,.85)}
+.info-strip{background:var(--teal-light);border-left:3px solid var(--teal);border-radius:0 6px 6px 0;padding:12px 16px;font-size:13px;color:var(--teal);line-height:1.6;margin-bottom:18px}
+.info-strip strong{font-weight:600}
+.warn-strip{background:#FAECE7;border-left:3px solid #993C1D;border-radius:0 6px 6px 0;padding:12px 16px;font-size:13px;color:#7a2020;line-height:1.6;margin-bottom:18px}
+.warn-strip strong{font-weight:600}
+.exit-card{border-radius:8px;padding:18px 22px;border:1px solid var(--border);background:#fff;margin-bottom:10px}
+.exit-num{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--gold);margin-bottom:3px}
+.exit-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.exit-body{font-size:13px;color:var(--mid);line-height:1.6}
+.exit-meta{font-size:12px;color:var(--teal);font-weight:600;margin-top:8px}
+.yr-compare{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:1.5rem}
+.yr-compare th{font-size:10px;font-weight:700;font-family:'Syne',sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--mid);text-align:left}
+.yr-compare th.r{text-align:right}
+.yr-compare td{padding:9px 10px;border-bottom:.5px solid #f0ece4;color:var(--ink)}
+.yr-compare td.r{text-align:right;font-weight:600}
+.yr-compare td.tl{color:var(--teal);text-align:right;font-weight:600}
+.yr-compare td.gd{color:#7a5c1a;text-align:right;font-weight:600}
+.yr-compare td.rd{color:var(--red);text-align:right;font-weight:600}
+.yr-compare tr:last-child td{border-bottom:none}
+@media(max-width:600px){nav{flex-direction:column;padding:12px 16px}.page{padding:20px 14px}.hero-title{font-size:24px}.market-grid{grid-template-columns:1fr}.slider-label{min-width:120px}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">PW <span>GCC</span> STRATEGY TOOL</div>
+  <div class="nav-tabs">
+    <button class="nav-tab on" onclick="showPage('overview')">Overview</button>
+    <button class="nav-tab" onclick="showPage('funding')">Funding</button>
+    <button class="nav-tab" onclick="showPage('markets')">Markets</button>
+    <button class="nav-tab" onclick="showPage('courses')">Courses</button>
+    <button class="nav-tab" onclick="showPage('investor')">Investor case</button>
+    <button class="nav-tab" onclick="showPage('exit')">Exit pathways</button>
+    <button class="nav-tab" onclick="showPage('timeline')">Year 1 timeline</button>
+    <button class="nav-tab" onclick="showPage('threeyear')">3-year plan</button>
+  </div>
+</nav>
+
+<!-- OVERVIEW -->
+<div class="page on" id="page-overview">
+  <div class="hero">
+    <div class="hero-eyebrow">Strategic expansion analysis · 2025–2028 · UAE + KSA only</div>
+    <div class="hero-title">Physics Wallah<br><span>UAE & Saudi Arabia</span></div>
+    <div class="hero-sub">A realistic 3-year financial and strategic analysis of PW's GCC expansion — with accurate compliance timelines, UAE + KSA only scope, and clear exit pathways for investors.</div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Total 3-year investment</div><div class="kpi-val gold">$18.4M</div><div class="kpi-sub">UAE + KSA · 36 months</div></div>
+    <div class="kpi"><div class="kpi-label">GCC market size 2035</div><div class="kpi-val teal">$16.3B</div><div class="kpi-sub">Growing at 15.5% CAGR</div></div>
+    <div class="kpi"><div class="kpi-label">PW current revenue</div><div class="kpi-val">$410M</div><div class="kpi-sub">TTM Dec 2025</div></div>
+    <div class="kpi"><div class="kpi-label">Expansion % of revenue</div><div class="kpi-val teal">4.5%</div><div class="kpi-sub">Self-fundable · no raise</div></div>
+    <div class="kpi"><div class="kpi-label">Year 3 GCC revenue</div><div class="kpi-val">$28M</div><div class="kpi-sub">UAE + KSA combined</div></div>
+    <div class="kpi"><div class="kpi-label">Break-even month</div><div class="kpi-val gold">Month 26</div><div class="kpi-sub">Realistic with compliance</div></div>
+  </div>
+  <div class="warn-strip"><strong>Compliance reality — the most important planning assumption:</strong> UAE approvals (KHDA + ADEK) take 6–9 months. Saudi approvals (ETEC + NCA) take 9–12 months. These are filed on Day 1 but B2B school and government revenue cannot start until approvals land. B2C digital subscriptions generate revenue in the interim from Month 4 onward.</div>
+  <div class="section-title">Why UAE + KSA — 4 structural reasons</div>
+  <div class="card"><div class="card-title">JEE/NEET has zero relevance in GCC <span class="tag tag-red">pivot required</span></div><div class="card-sub">PW's India product must be repositioned around GCC workforce needs — AI, Cybersecurity, Cloud, Data Science, and Business Analytics. These align directly with Saudi Vision 2030 and UAE Centennial 2071.</div></div>
+  <div class="card"><div class="card-title">Government-funded demand <span class="tag tag-teal">low risk</span></div><div class="card-sub">Saudi Hadaf fund subsidizes 50–100% of training costs for Saudi nationals. UAE allocates $2.4B annually to education. This is policy-mandated demand — not discretionary consumer spending.</div></div>
+  <div class="card"><div class="card-title">No quality Arabic EdTech at scale <span class="tag tag-gold">market gap</span></div><div class="card-sub">No global competitor produces affordable, high-quality Arabic professional certification at scale. Coursera charges $399–799/course. PW enters at $99–299 — a structural pricing moat Coursera cannot match.</div></div>
+  <div class="card"><div class="card-title">USD-pegged revenue diversification <span class="tag tag-blue">FX benefit</span></div><div class="card-sub">AED and SAR are both USD-pegged. GCC revenues add hard-currency stability to PW's predominantly INR revenue base — reducing currency risk for the business and for international investors.</div></div>
+</div>
+
+<!-- FUNDING -->
+<div class="page" id="page-funding">
+  <div class="hero">
+    <div class="hero-eyebrow">Financial model · UAE + KSA · 3 years</div>
+    <div class="hero-title">Funding <span>Requirements</span></div>
+    <div class="hero-sub">Interactive 3-year cost estimator for UAE + KSA. Adjust parameters to model your scenario in real time.</div>
+  </div>
+  <div class="slider-block">
+    <div class="section-title">Interactive 3-year funding calculator</div>
+    <div class="slider-row">
+      <span class="slider-label">Market focus</span>
+      <input type="range" min="1" max="2" step="1" value="2" id="sl-markets">
+      <span class="slider-val" id="out-markets">Both (UAE + KSA)</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Team size (total FTE)</span>
+      <input type="range" min="15" max="70" step="5" value="40" id="sl-team">
+      <span class="slider-val" id="out-team">40 FTE</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Runway (months)</span>
+      <input type="range" min="12" max="36" step="6" value="36" id="sl-runway">
+      <span class="slider-val" id="out-runway">36 months</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">Courses to produce</span>
+      <input type="range" min="15" max="60" step="5" value="45" id="sl-courses">
+      <span class="slider-val" id="out-courses">45 courses</span>
+    </div>
+    <div class="result-box">
+      <div class="result-label">Estimated total funding required</div>
+      <div class="result-val" id="result-total">$18.4M</div>
+      <div class="result-sub" id="result-range">Conservative $15.1M — Aggressive $22.6M</div>
+    </div>
+  </div>
+  <div class="section-title">3-year cost breakdown — UAE + KSA</div>
+  <table class="cost-table">
+    <tr><th>Pillar</th><th>What it covers</th><th style="text-align:right">UAE (3yr)</th><th style="text-align:right">KSA (3yr)</th><th style="text-align:right">Total</th></tr>
+    <tr><td><strong>People & HR</strong><div class="note">UAE 18 FTE · KSA 22 FTE · India 20 FTE</div></td><td class="note">Country GMs, sales, content, Arabic support, India GCC engineers</td><td class="amt">$4.2M</td><td class="amt">$5.7M</td><td class="amt">$9.9M</td></tr>
+    <tr><td><strong>Course production</strong><div class="note">45 GCC-native Arabic/English courses</div></td><td class="note">AI, Cybersecurity, Cloud, Data Science, Business Analytics, English</td><td class="amt">$560K</td><td class="amt">$760K</td><td class="amt">$1.32M</td></tr>
+    <tr><td><strong>Arabic localization</strong><div class="note">RTL platform + subtitles + culture</div></td><td class="note">RTL redesign, Arabic subtitles, cultural adaptation, Arabic support</td><td class="amt">$520K</td><td class="amt">$480K</td><td class="amt">$1.0M</td></tr>
+    <tr><td><strong>Marketing & sales</strong><div class="note">3 years · digital + B2B + events</div></td><td class="note">Arabic marketing, GESS Dubai, B2B BD, influencers</td><td class="amt">$1.1M</td><td class="amt">$1.4M</td><td class="amt">$2.5M</td></tr>
+    <tr><td><strong>Data compliance</strong><div class="note">UAE PDPL + Saudi PDPL · ongoing 3yr</div></td><td class="note">AWS setup, DPO, audits, NCA cert · takes 6–12 months per market</td><td class="amt">$380K</td><td class="amt">$580K</td><td class="amt">$960K</td></tr>
+    <tr><td><strong>Partnerships</strong><div class="note">Universities + Hadaf + corporate</div></td><td class="note">JV setup, KHDA/ETEC approvals (6–12 months each), Hadaf BD</td><td class="amt">$380K</td><td class="amt">$560K</td><td class="amt">$940K</td></tr>
+    <tr><td><strong>Infrastructure</strong><div class="note">AWS UAE + Riyadh + CDN · 3 years</div></td><td class="note">Cloud, data residency, CDN, NCA cert, payment gateways</td><td class="amt">$320K</td><td class="amt">$480K</td><td class="amt">$800K</td></tr>
+    <tr><td><strong>Legal & entity</strong><div class="note">DIFC + Riyadh + ongoing</div></td><td class="note">Registration, regulatory approvals, legal retainers · 3 years</td><td class="amt">$280K</td><td class="amt">$420K</td><td class="amt">$700K</td></tr>
+    <tr><td><strong>Office & ops</strong></td><td class="note">Dubai HQ, Riyadh office, India↔GCC travel · 3 years</td><td class="amt">$280K</td><td class="amt">$380K</td><td class="amt">$660K</td></tr>
+    <tr><td><strong>Contingency (10%)</strong></td><td class="note">Regulatory delays, talent overruns, FX buffer</td><td class="amt">$802K</td><td class="amt">$958K</td><td class="amt">$1.76M</td></tr>
+    <tr class="total"><td colspan="2"><strong>Total 3-year investment</strong></td><td class="amt">$8.8M</td><td class="amt">$11.8M</td><td class="amt">$20.6M</td></tr>
+  </table>
+  <div class="info-strip">3-year total GCC revenue estimated at ~$44M → <strong>net positive $23.4M by end of Year 3.</strong> At $410M revenue this is self-fundable from PW's IPO cash with zero external raise required.</div>
+</div>
+
+<!-- MARKETS -->
+<div class="page" id="page-markets">
+  <div class="hero">
+    <div class="hero-eyebrow">Market analysis · UAE + KSA only</div>
+    <div class="hero-title">UAE vs <span>Saudi Arabia</span></div>
+    <div class="hero-sub">Two distinct markets with very different compliance requirements. Compliance filed Day 1 in both — UAE B2B unlocks at Month 6–7, KSA B2B unlocks at Month 10–11.</div>
+  </div>
+  <div class="market-grid">
+    <div class="market-card">
+      <div class="market-flag">🇦🇪</div>
+      <div class="market-name">United Arab Emirates</div>
+      <div style="font-size:11px;color:var(--mid);margin-bottom:8px">Dubai · Abu Dhabi</div>
+      <div class="market-cost">$8.8M</div>
+      <div style="font-size:11px;color:var(--mid);margin-bottom:12px">3-year total cost</div>
+      <div class="market-items">
+        B2C launch: <strong>Month 4</strong><br>
+        B2B unlock: <strong>Month 6–7</strong> (post KHDA)<br>
+        Entity: DIFC or ADGM freezone<br>
+        Compliance: UAE PDPL · KHDA · ADEK<br>
+        Approval time: <strong>6–9 months</strong><br>
+        Data: AWS me-central-1 Dubai<br>
+        Key partner: American Univ. Sharjah<br>
+        TAM 2028: <strong>$850M EdTech</strong><br>
+        Y3 revenue target: <strong>$10M</strong>
+      </div>
+    </div>
+    <div class="market-card">
+      <div class="market-flag">🇸🇦</div>
+      <div class="market-name">Saudi Arabia</div>
+      <div style="font-size:11px;color:var(--mid);margin-bottom:8px">Riyadh · Jeddah</div>
+      <div class="market-cost">$11.8M</div>
+      <div style="font-size:11px;color:var(--mid);margin-bottom:12px">3-year total cost</div>
+      <div class="market-items">
+        B2C launch: <strong>Month 6</strong><br>
+        B2B unlock: <strong>Month 10–11</strong> (post ETEC)<br>
+        Entity: Mandatory Riyadh entity<br>
+        Compliance: Saudi PDPL · ETEC · NCA<br>
+        Approval time: <strong>9–12 months</strong><br>
+        Data: AWS Riyadh mandatory<br>
+        Key partner: Hadaf + KAU<br>
+        TAM 2028: <strong>$2.5B EdTech</strong><br>
+        Y3 revenue target: <strong>$18M</strong>
+      </div>
+    </div>
+  </div>
+  <div class="warn-strip"><strong>Compliance is the longest lead-time item in this entire expansion.</strong> UAE: KHDA 6–9 months, ADEK 6–9 months, UAE PDPL audit 6 months. KSA: ETEC 9–12 months, NCA cybersecurity cert 3–4 months, Saudi PDPL/SDAIA 6–9 months. File everything on Month 1. Any delay in filing pushes every B2B revenue milestone back by the same amount.</div>
+  <div class="section-title">Compliance timeline — what unlocks when</div>
+  <div class="bar-wrap"><div class="bar-top"><span>UAE — AWS + PDPL setup</span><span>Month 1–3</span></div><div class="bar-bg"><div class="bar-fill" style="width:8%;background:var(--teal)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>KSA — AWS Riyadh + NCA cert</span><span>Month 1–4</span></div><div class="bar-bg"><div class="bar-fill" style="width:11%;background:var(--teal)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>UAE — KHDA + ADEK approval</span><span>Month 6–9</span></div><div class="bar-bg"><div class="bar-fill" style="width:25%;background:var(--gold)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>KSA — ETEC certification</span><span>Month 9–12</span></div><div class="bar-bg"><div class="bar-fill" style="width:33%;background:var(--gold)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>Both markets — full B2B operational</span><span>Month 12+</span></div><div class="bar-bg"><div class="bar-fill" style="width:33%;background:#E24B4A"></div></div></div>
+  <div class="info-strip" style="margin-top:14px"><strong>Revenue bridge strategy:</strong> B2C digital subscriptions (no approvals required) launch in UAE from Month 4 and KSA from Month 6. This generates $800K–$1.2M in Year 1 revenue while B2B approvals are pending — critical for managing investor expectations and burn rate.</div>
+</div>
+
+<!-- COURSES -->
+<div class="page" id="page-courses">
+  <div class="hero">
+    <div class="hero-eyebrow">Product strategy · UAE + KSA</div>
+    <div class="hero-title">Course <span>Portfolio</span></div>
+    <div class="hero-sub">45 courses over 3 years. Replacing JEE/NEET with GCC-relevant professional skills aligned to Vision 2030 and UAE Centennial 2071.</div>
+  </div>
+  <div class="course-grid">
+    <div class="course-card"><div class="course-rank">Priority 1 · Highest demand</div><div class="course-title">AI & Machine Learning</div><div class="course-body">UAE AI Strategy 2031 + Vision 2030 · beginner to pro · Arabic + English · Gulf instructors</div><div class="course-price">$299 – $799</div><div class="demand-bar"><div class="demand-fill" style="width:95%"></div></div></div>
+    <div class="course-card"><div class="course-rank">Priority 1 · Highest demand</div><div class="course-title">Cybersecurity</div><div class="course-body">CISSP prep · ethical hacking · KSA NCA framework · GCC banking + telco case studies</div><div class="course-price">$349 – $999</div><div class="demand-bar"><div class="demand-fill" style="width:92%"></div></div></div>
+    <div class="course-card"><div class="course-rank">Priority 2 · High demand</div><div class="course-title">Cloud Computing</div><div class="course-body">AWS + Azure + GCP · GCC data residency focus · co-branded with AWS Training</div><div class="course-price">$249 – $699</div><div class="demand-bar"><div class="demand-fill" style="width:82%"></div></div></div>
+    <div class="course-card"><div class="course-rank">Priority 2 · High demand</div><div class="course-title">Data Science</div><div class="course-body">Python, SQL, Power BI · Arabic datasets · GCC business case studies · Vision 2030</div><div class="course-price">$199 – $599</div><div class="demand-bar"><div class="demand-fill" style="width:78%"></div></div></div>
+    <div class="course-card"><div class="course-rank">Priority 3 · Growing</div><div class="course-title">Business Analytics</div><div class="course-body">Finance + supply chain · Vision 2030 focus · Arabic medium available</div><div class="course-price">$199 – $499</div><div class="demand-bar"><div class="demand-fill" style="width:68%"></div></div></div>
+    <div class="course-card"><div class="course-rank">Priority 3 · Growing</div><div class="course-title">English & Professional</div><div class="course-body">IELTS/TOEFL prep · business English · GCC workplace communication</div><div class="course-price">$99 – $299</div><div class="demand-bar"><div class="demand-fill" style="width:60%"></div></div></div>
+  </div>
+  <div class="section-title">PW vs global competitors — GCC pricing</div>
+  <div class="bar-wrap"><div class="bar-top"><span>Coursera (avg)</span><span>$399 – $799</span></div><div class="bar-bg"><div class="bar-fill" style="width:85%;background:var(--red)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>edX (avg)</span><span>$299 – $599</span></div><div class="bar-bg"><div class="bar-fill" style="width:65%;background:var(--mid)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>Udemy (avg)</span><span>$189 – $399</span></div><div class="bar-bg"><div class="bar-fill" style="width:52%;background:var(--gold)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>Physics Wallah GCC</span><span>$99 – $399</span></div><div class="bar-bg"><div class="bar-fill" style="width:38%;background:var(--teal)"></div></div></div>
+  <div class="info-strip" style="margin-top:14px"><strong>PW's structural cost moat:</strong> PW produces content 5–8× cheaper than Coursera due to its India-based production engine. Arabic courses with Gulf instructors cost PW $25K–40K per course vs Coursera's $150K–200K. This pricing advantage is permanent — Coursera's cost base cannot compete at PW's price points.</div>
+</div>
+
+<!-- INVESTOR -->
+<div class="page" id="page-investor">
+  <div class="hero">
+    <div class="hero-eyebrow">Singapore family office · investment case</div>
+    <div class="hero-title">Financial <span>Justification</span></div>
+    <div class="hero-sub">3-year return model for a Singapore family office investing in PW's UAE + KSA expansion. Adjust the sliders to model your own scenario.</div>
+  </div>
+  <div class="slider-block">
+    <div class="section-title">Live 3-year return calculator</div>
+    <div class="slider-row">
+      <span class="slider-label">Investment ticket ($M)</span>
+      <input type="range" min="2" max="20" step="1" value="10" id="sl-invest">
+      <span class="slider-val" id="out-invest">$10M</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">GCC revenue Year 3 ($M)</span>
+      <input type="range" min="5" max="50" step="1" value="28" id="sl-gcc-rev">
+      <span class="slider-val" id="out-gcc-rev">$28M</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">PW revenue multiple</span>
+      <input type="range" min="5" max="14" step="1" value="9" id="sl-mult">
+      <span class="slider-val" id="out-mult">9×</span>
+    </div>
+    <div class="result-box">
+      <div class="result-label">Projected return on $<span id="r-invest">10</span>M over 3 years</div>
+      <div class="result-val" id="r-return">$38M</div>
+      <div class="result-sub" id="r-irr">3.8× money · IRR ~56% over 3 years</div>
+    </div>
+  </div>
+  <div class="section-title">Three scenarios (base: $10M invested)</div>
+  <div class="scenario-grid">
+    <div class="scenario-card" style="background:var(--teal-light);border-color:#9FE1CB"><div class="sc-title" style="color:var(--teal)">Conservative</div><div class="sc-body">GCC revenue $14M Y3 · 7× multiple · compliance delays · Hadaf slow</div><div class="sc-val" style="color:var(--teal)">2.1× · IRR 28%</div></div>
+    <div class="scenario-card" style="background:var(--blue-light);border-color:#85B7EB"><div class="sc-title" style="color:var(--blue)">Base case</div><div class="sc-body">GCC revenue $28M Y3 · 9× multiple · Hadaf signed M10 · 2 university JVs</div><div class="sc-val" style="color:var(--blue)">3.8× · IRR 56%</div></div>
+    <div class="scenario-card" style="background:var(--gold-light);border-color:var(--gold)"><div class="sc-title" style="color:#7a5c1a">Bull case</div><div class="sc-body">GCC revenue $42M Y3 · 12× multiple · global EdTech re-rating · acquisition</div><div class="sc-val" style="color:#7a5c1a">6.2× · IRR 84%</div></div>
+  </div>
+  <div class="section-title">PW fundamentals</div>
+  <div class="inv-grid">
+    <div class="inv-card"><div class="inv-label">Post-IPO valuation</div><div class="inv-val">$2.86B</div></div>
+    <div class="inv-card"><div class="inv-label">TTM revenue</div><div class="inv-val">$410M</div></div>
+    <div class="inv-card"><div class="inv-label">Revenue CAGR (3yr)</div><div class="inv-val">~180%</div></div>
+    <div class="inv-card"><div class="inv-label">IPO raised (Nov 2025)</div><div class="inv-val">$410M</div></div>
+    <div class="inv-card"><div class="inv-label">Recommended structure</div><div class="inv-val">CCPS</div></div>
+    <div class="inv-card"><div class="inv-label">S&P 500 benchmark</div><div class="inv-val">~10% IRR</div></div>
+  </div>
+  <div class="section-title">Comparable EdTech IRR benchmarks</div>
+  <div class="bar-wrap"><div class="bar-top"><span>PW GCC — base case (3yr)</span><span>IRR 56%</span></div><div class="bar-bg"><div class="bar-fill" style="width:80%;background:var(--teal)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>upGrad early investors</span><span>IRR ~40%</span></div><div class="bar-bg"><div class="bar-fill" style="width:57%;background:var(--blue)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>Eruditus Series E (2021)</span><span>IRR ~28%</span></div><div class="bar-bg"><div class="bar-fill" style="width:40%;background:var(--mid)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>S&P 500 average</span><span>IRR ~10%</span></div><div class="bar-bg"><div class="bar-fill" style="width:14%;background:#888780"></div></div></div>
+  <div class="verdict">
+    <div class="verdict-title">One-line verdict for the investment committee</div>
+    <div class="verdict-body">"Invest in the world's fastest-growing EdTech company as it enters a $16.3B market with government-backed demand. UAE + KSA only, 3-year horizon, projected 3.8× return with a realistic compliance timeline built in. PW doesn't need the capital — you want the exposure before GCC revenues reprice the stock."</div>
+  </div>
+</div>
+
+<!-- EXIT PATHWAYS -->
+<div class="page" id="page-exit">
+  <div class="hero">
+    <div class="hero-eyebrow">Investment exit strategy · Singapore family office</div>
+    <div class="hero-title">Clear <span>Exit Pathways</span></div>
+    <div class="hero-sub">Four distinct exit routes — from liquid public market sales to strategic acquisition premiums. Each has a different timeline, return profile, and risk level.</div>
+  </div>
+  <div class="section-title">Pathway 1 — NSE secondary market sale (lowest friction)</div>
+  <div class="exit-card">
+    <div class="exit-num">01</div>
+    <div class="exit-title">Sell shares on NSE after lock-in expiry</div>
+    <div class="exit-body">PW listed on NSE in November 2025 (ticker: PWL). A Singapore family office entering via PIPE at a 10–15% discount to market has a standard 12–18 month lock-in. After expiry, shares can be sold freely on the open market or via a block deal. This is the most liquid, lowest-friction exit — no negotiations, no deal structuring. Simply instruct your broker. Best used as a partial exit at Month 24 to return capital while holding a remaining stake for higher-return paths.</div>
+    <div class="exit-meta">Timeline: Month 18–24 · Expected return: 1.5–2.5× · Risk: Low · Best for: partial liquidity event</div>
+  </div>
+  <div class="section-title">Pathway 2 — block deal to GCC sovereign fund</div>
+  <div class="exit-card">
+    <div class="exit-num">02</div>
+    <div class="exit-title">Structured block sale to Mubadala, PIF, or QIA</div>
+    <div class="exit-body">At Year 3 when GCC revenues hit $28M with active Hadaf and ETEC approvals, PW becomes highly attractive to GCC sovereign wealth funds — Mubadala (Abu Dhabi), PIF (Saudi Arabia), and QIA (Qatar) all actively seek EdTech investments aligned to their national workforce mandates. A Singapore family office holding a PW stake with proven GCC traction is uniquely positioned to negotiate a direct block sale to these funds, who would pay a 5–15% premium to market price for strategic fit. Singapore's bilateral investment ties with UAE and KSA make these introductions significantly more accessible than from an India-only investor.</div>
+    <div class="exit-meta">Timeline: Year 3 (Month 30–36) · Expected return: 3.5–5× · Risk: Low-Medium · Best for: maximum return exit</div>
+  </div>
+  <div class="section-title">Pathway 3 — strategic acquisition of PW or GCC division</div>
+  <div class="exit-card">
+    <div class="exit-num">03</div>
+    <div class="exit-title">Acquisition by Coursera, Google, or a GCC EdTech platform</div>
+    <div class="exit-body">Once PW demonstrates $25M+ in GCC revenue and holds ETEC + KHDA + Hadaf approvals, it becomes a compelling acquisition target. Coursera or edX would pay a significant premium to acquire PW's GCC market position rather than build it from scratch — the regulatory approvals alone take 2 years and cannot be replicated overnight with money. A GCC-focused acquirer such as Noon Academy, Alef Education, or a sovereign-backed EdTech platform would value PW's Arabic content library and Hadaf relationship at 2–4× revenue as a strategic premium. Your equity stake exits at acquisition price.</div>
+    <div class="exit-meta">Timeline: Year 3–5 · Expected return: 4–7× · Risk: Medium · Best for: transformational exit</div>
+  </div>
+  <div class="section-title">Pathway 4 — GCC subsidiary spin-out or separate listing</div>
+  <div class="exit-card">
+    <div class="exit-num">04</div>
+    <div class="exit-title">PW lists GCC operations separately on ADX or Tadawul</div>
+    <div class="exit-body">If PW GCC reaches $30M+ revenue by Year 4, PW management may spin out the GCC business as a separate entity on Abu Dhabi Securities Exchange (ADX) or Saudi Exchange (Tadawul). GCC-listed EdTech companies command significantly higher multiples than Indian EdTech on regional exchanges — Vision 2030 mandates create structural premium. A Singapore family office investor receives shares in the newly listed GCC entity, which provides another liquid exit vehicle. This path is conditional on GCC performance but represents the highest potential return scenario.</div>
+    <div class="exit-meta">Timeline: Year 4–5 · Expected return: 5–10× · Risk: Medium-High · Best for: highest upside exit</div>
+  </div>
+  <div class="section-title">Exit return comparison</div>
+  <div class="bar-wrap"><div class="bar-top"><span>NSE secondary sale (Path 1)</span><span>1.5–2.5×</span></div><div class="bar-bg"><div class="bar-fill" style="width:22%;background:var(--teal)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>Sovereign fund block deal (Path 2)</span><span>3.5–5×</span></div><div class="bar-bg"><div class="bar-fill" style="width:47%;background:var(--teal)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>Strategic acquisition (Path 3)</span><span>4–7×</span></div><div class="bar-bg"><div class="bar-fill" style="width:65%;background:var(--gold)"></div></div></div>
+  <div class="bar-wrap"><div class="bar-top"><span>GCC subsidiary spin-out (Path 4)</span><span>5–10×</span></div><div class="bar-bg"><div class="bar-fill" style="width:100%;background:var(--gold)"></div></div></div>
+  <div class="info-strip" style="margin-top:14px"><strong>Recommended two-tranche exit strategy:</strong> Use Path 1 (NSE sale) to exit 40–50% of stake at Month 24 for liquidity. Hold remaining 50–60% for Path 2 or 3 at Year 3. This returns capital early while keeping maximum exposure to the highest-return scenarios.</div>
+</div>
+
+<!-- YEAR 1 TIMELINE -->
+<div class="page" id="page-timeline">
+  <div class="hero">
+    <div class="hero-eyebrow">Execution roadmap · UAE + KSA · realistic timelines</div>
+    <div class="hero-title">Year 1 <span>Timeline</span></div>
+    <div class="hero-sub">Accurate 12-month plan. Compliance filed Day 1. B2C bridges revenue while B2B approvals are pending (6–12 months). No B2B revenue modelled before approvals land.</div>
+  </div>
+  <div class="warn-strip"><strong>The most common mistake in GCC EdTech expansion plans:</strong> Modelling B2B school or government revenue before compliance approvals land. UAE KHDA/ADEK takes 6–9 months. KSA ETEC takes 9–12 months. Any plan showing B2B revenue before these dates will be challenged by every sophisticated investor, board member, or regulator.</div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot" style="background:var(--red)"></div>
+      <div class="tl-month">Month 1 — THE most critical month</div>
+      <div class="tl-title">File all compliance applications simultaneously</div>
+      <div class="tl-body">DIFC entity registration filed · KSA Riyadh entity filing started · AWS UAE (me-central-1) + AWS Riyadh live · KHDA application submitted (starts 6–9 month clock) · ADEK application submitted · ETEC application submitted (starts 9–12 month clock) · NCA cybersecurity cert filed (3–4 month clock) · Saudi PDPL/SDAIA registration started · UAE PDPL legal audit commissioned · DPO hired · Arabic UX designer contracted</div>
+      <div class="tl-warn">⚠ Every compliance application delayed here delays B2B revenue by the same amount</div>
+      <div class="tl-cost">Spend: $580K</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-month">Month 2–3 — Build & hire</div>
+      <div class="tl-title">Platform build + team hiring + content production</div>
+      <div class="tl-body">UAE Country GM hired · KSA Country Head search active · RTL platform development begins · 12 Arabic courses in production · HyperPay + Telr payment integrations · DIFC entity fully registered · KSA Riyadh entity in progress · NCA cert expected Month 3–4</div>
+      <div class="tl-cost">Spend: $1.1M combined</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:var(--teal)"></div>
+      <div class="tl-month">Month 4 — UAE B2C soft launch (no approvals needed)</div>
+      <div class="tl-title">Revenue starts — digital subscriptions only</div>
+      <div class="tl-body">RTL app live · UAE B2C digital launch (school contracts still pending KHDA) · 15 Arabic courses live · performance marketing begins · 1,200+ early B2C subscribers · Hadaf first meeting in Riyadh</div>
+      <div class="tl-cost">Spend: $980K · B2C revenue: ~$35K month 4</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-month">Month 5–6 — KSA B2C launch + NCA cert received</div>
+      <div class="tl-title">KSA digital subscriptions live · NCA cert unlocks KSA tech contracts</div>
+      <div class="tl-body">KSA B2C app launch · KSA entity fully registered · NCA cybersecurity cert received (enables KSA tech company B2B) · 20 courses live · 3,000+ total students UAE + KSA · Hadaf MOU negotiation active</div>
+      <div class="tl-cost">Spend: $920K/month · Combined B2C revenue growing</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:var(--gold)"></div>
+      <div class="tl-month">Month 6–7 — UAE KHDA + ADEK approvals received</div>
+      <div class="tl-title">UAE B2B school contracts now unlocked</div>
+      <div class="tl-body">KHDA approval received · ADEK approval received · 3 Dubai school B2B pilots signed immediately · UAE university JV agreement signed · Hadaf MOU signed · 5,000+ paying students · 25 courses live</div>
+      <div class="tl-cost">Spend: $880K/month · UAE B2B revenue starts</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-month">Month 7–9 — Scale + enterprise B2B</div>
+      <div class="tl-title">First corporate B2B + Hadaf first tranche</div>
+      <div class="tl-body">First Hadaf student cohort enrolled · ADNOC or du corporate pilot signed · KAU university JV negotiations · 30 courses live · Arabic SEO traffic growing · 10,000+ total students · burn declining</div>
+      <div class="tl-cost">Spend: $700K–$820K/month · declining</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:var(--gold)"></div>
+      <div class="tl-month">Month 10–11 — KSA ETEC approval received</div>
+      <div class="tl-title">Largest single revenue unlock — KSA B2B schools + government</div>
+      <div class="tl-body">ETEC certification received · KSA school B2B contracts now possible · 5 Riyadh school pilots signed immediately · KSA government training contracts eligible · Hadaf scope expanded · KAU JV signed · Saudi PDPL compliance confirmed · 35 courses live</div>
+      <div class="tl-warn">⚠ This is the most valuable milestone in the entire Year 1 plan — protect the ETEC timeline</div>
+      <div class="tl-cost">Spend: $620K/month · Major KSA B2B revenue unlock</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:var(--teal)"></div>
+      <div class="tl-month">Month 12 — Year 1 close</div>
+      <div class="tl-title">Both markets fully operational and compliant</div>
+      <div class="tl-body">15,000+ paying students · 35 courses · monthly GCC revenue $420K+ · UAE + KSA fully compliant · Hadaf active · 2 university JVs · 3 corporate B2B contracts · burn $550K/month · Year 2 plan locked</div>
+      <div class="tl-cost">Y1 total: $10.4M · Y1 revenue: $2.8M · Net outflow: $7.6M</div>
+    </div>
+  </div>
+  <div class="info-strip"><strong>Key planning rule:</strong> B2C revenue from Month 4 (UAE) and Month 5–6 (KSA) generates $800K–$1.2M in Year 1 — this bridges the gap while B2B approvals are pending and keeps the investment narrative credible with any board or investor.</div>
+</div>
+
+<!-- 3-YEAR PLAN -->
+<div class="page" id="page-threeyear">
+  <div class="hero">
+    <div class="hero-eyebrow">3-year expansion roadmap · 2025–2028 · UAE + KSA</div>
+    <div class="hero-title">3-Year <span>GCC Plan</span></div>
+    <div class="hero-sub">Year 1: compliance + B2C foundation. Year 2: B2B scale + Hadaf growth. Year 3: full profitability + exit readiness. UAE and Saudi Arabia only.</div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Total 3-year investment</div><div class="kpi-val gold">$18.4M</div><div class="kpi-sub">UAE + KSA</div></div>
+    <div class="kpi"><div class="kpi-label">3-year total revenue</div><div class="kpi-val teal">$44M</div><div class="kpi-sub">UAE + KSA combined</div></div>
+    <div class="kpi"><div class="kpi-label">Net 3-year position</div><div class="kpi-val">+$25.6M</div><div class="kpi-sub">After investment offset</div></div>
+    <div class="kpi"><div class="kpi-label">Students by Month 36</div><div class="kpi-val teal">65,000+</div><div class="kpi-sub">UAE + KSA</div></div>
+    <div class="kpi"><div class="kpi-label">Courses by Month 36</div><div class="kpi-val gold">45+</div><div class="kpi-sub">Arabic + English</div></div>
+    <div class="kpi"><div class="kpi-label">Break-even</div><div class="kpi-val">Month 26</div><div class="kpi-sub">Realistic estimate</div></div>
+  </div>
+  <div class="section-title">Year-by-year comparison</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="yr-compare">
+      <tr><th>Metric</th><th class="r">Year 1</th><th class="r" style="color:var(--teal)">Year 2</th><th class="r" style="color:#7a5c1a">Year 3</th></tr>
+      <tr><td>Investment</td><td class="r">$10.4M</td><td class="tl">$5.2M</td><td class="gd">$2.8M</td></tr>
+      <tr><td>GCC Revenue</td><td class="r">$2.8M</td><td class="tl">$13.2M</td><td class="gd">$28M</td></tr>
+      <tr><td>Net position (cumulative)</td><td class="rd">–$7.6M</td><td class="tl">+$0.4M</td><td class="gd">+$25.6M</td></tr>
+      <tr><td>Paying students</td><td class="r">15,000</td><td class="tl">38,000</td><td class="gd">65,000+</td></tr>
+      <tr><td>Courses live</td><td class="r">35</td><td class="tl">42</td><td class="gd">45+</td></tr>
+      <tr><td>B2B contracts active</td><td class="r">3</td><td class="tl">9</td><td class="gd">18+</td></tr>
+      <tr><td>Monthly burn (end of year)</td><td class="r">$550K</td><td class="tl">$420K</td><td class="gd">$320K</td></tr>
+      <tr><td>Monthly revenue (end of year)</td><td class="r">$420K</td><td class="tl">$1.2M</td><td class="gd">$2.6M+</td></tr>
+      <tr><td>B2B school contracts</td><td class="r">UAE only (from M7)</td><td class="tl">UAE + KSA</td><td class="gd">Full scale</td></tr>
+      <tr><td>Govt contracts (Hadaf)</td><td class="r">MOU signed M7</td><td class="tl">Y2 renewal $3.2M</td><td class="gd">Y3 renewal $5M+</td></tr>
+    </table>
+  </div>
+
+  <div class="section-title" style="margin-top:1.5rem">Year 1 — compliance + B2C foundation</div>
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-dot" style="background:var(--red)"></div><div class="tl-month">M1 — file all compliance applications</div><div class="tl-title">KHDA + ADEK + ETEC + NCA + PDPL all filed Day 1</div><div class="tl-body">Entity setup · AWS UAE + Riyadh · DPO hired · RTL build begins · compliance clocks start</div><div class="tl-warn">⚠ UAE approvals: 6–9 months · KSA approvals: 9–12 months · cannot be accelerated</div><div class="tl-cost">Spend: $580K</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:var(--teal)"></div><div class="tl-month">M4 — UAE B2C launch (no approval needed)</div><div class="tl-title">Digital subscriptions — revenue bridge while approvals pending</div><div class="tl-body">15 courses · RTL app · 1,200+ subscribers · KSA B2C follows Month 5–6</div><div class="tl-cost">Spend: $980K · B2C revenue starts</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:var(--gold)"></div><div class="tl-month">M6–7 — UAE B2B unlocks (KHDA + ADEK approved)</div><div class="tl-title">School + corporate contracts now possible in UAE</div><div class="tl-body">3 school pilots · university JV · Hadaf MOU · 5,000+ students</div><div class="tl-cost">Spend: $880K · UAE B2B revenue starts</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:var(--gold)"></div><div class="tl-month">M10–11 — KSA B2B unlocks (ETEC approved)</div><div class="tl-title">Largest Year 1 milestone — KSA school + govt contracts open</div><div class="tl-body">5 KSA school pilots · Hadaf expanded · KAU JV · 15,000+ students</div><div class="tl-cost">Y1 close: $10.4M spend · $2.8M revenue · cumulative: –$7.6M</div></div>
+  </div>
+
+  <div class="section-title">Year 2 — B2B scale + Hadaf growth (Months 13–24)</div>
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-month">M13–16 — enterprise B2B push</div><div class="tl-title">Corporate contracts compound · Aramco pilot · ADNOC renewal</div><div class="tl-body">Aramco enterprise pilot (2,000 employees) · ADNOC full contract · 2nd university JV · 42 courses · 25,000 students</div><div class="tl-cost">Spend: $480K/month · Revenue $900K/month</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:var(--gold)"></div><div class="tl-month">M20 — Hadaf Year 2 renewal ($3.2M)</div><div class="tl-title">Government revenue compounds — largest single payment</div><div class="tl-body">12,000 Saudi nationals enrolled · expanded course catalogue · $3.2M tranche covers all remaining Y2 costs · cumulative net turns positive</div><div class="tl-cost">Y2 close: $5.2M spend · $13.2M revenue · cumulative: +$0.4M</div></div>
+  </div>
+
+  <div class="section-title">Year 3 — profitability + exit readiness (Months 25–36)</div>
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-dot" style="background:var(--gold)"></div><div class="tl-month">M26 — GCC cash-flow breakeven</div><div class="tl-title">Monthly revenue exceeds monthly burn — inflection point</div><div class="tl-body">Revenue $1.4M/month · Burn $1.3M/month · all future revenue is margin · investor exit conversations begin</div><div class="tl-cost">Revenue = Burn · GCC operations self-sustaining from here</div></div>
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-month">M28–32 — profitability ramp</div><div class="tl-title">18+ B2B contracts · 55,000 students · Arabic SEO dominant</div><div class="tl-body">Organic traffic exceeds paid · B2B renewals compounding · Hadaf Year 3 renewal $5M+ · sovereign fund investor conversations active</div><div class="tl-cost">Spend: $320K/month · Revenue: $2.1M/month</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:var(--teal)"></div><div class="tl-month">M36 — Year 3 close · fully exit-ready</div><div class="tl-title">Full profitability · Singapore investor exit window open</div><div class="tl-body">65,000+ students · $28M annual GCC revenue · 45+ courses · 18+ B2B contracts · GCC = 6.8% of PW revenue · Path 1 (NSE) or Path 2 (sovereign fund) exit available</div><div class="tl-cost">Y3: $2.8M spend · $28M revenue · cumulative net: +$25.6M</div></div>
+  </div>
+
+  <div class="verdict">
+    <div class="verdict-title">3-year plan summary</div>
+    <div class="verdict-body">Physics Wallah enters UAE and Saudi Arabia with a compliance-first, B2C-bridge strategy. No B2B revenue is modelled before regulatory approvals land. UAE B2B unlocks at Month 6–7, KSA at Month 10–11. By Month 36: 65,000+ students, $28M annual revenue, 18+ B2B contracts, and 4 clear exit pathways available to a Singapore family office — with a base case 3.8× return on a $10M investment over 3 years.</div>
+  </div>
+</div>
+
+<script>
+function r1(n){return Math.round(n*10)/10}
+function fmt(n){return '$'+r1(n)+'M'}
+function showPage(n){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on')});
+  document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('on')});
+  document.getElementById('page-'+n).classList.add('on');
+  var order=['overview','funding','markets','courses','investor','exit','timeline','threeyear'];
+  document.querySelectorAll('.nav-tab')[order.indexOf(n)].classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function _doFunding(){
+  var markets=parseInt(document.getElementById('sl-markets').value);
+  var team=parseInt(document.getElementById('sl-team').value);
+  var runway=parseInt(document.getElementById('sl-runway').value);
+  var courses=parseInt(document.getElementById('sl-courses').value);
+  document.getElementById('out-markets').textContent=markets===1?'UAE only':'Both (UAE + KSA)';
+  document.getElementById('out-team').textContent=team+' FTE';
+  document.getElementById('out-runway').textContent=runway+' months';
+  document.getElementById('out-courses').textContent=courses+' courses';
+  var base=markets===1?8.8:18.4;
+  var adj=(team-40)*0.06+(runway-36)*0.22+(courses-45)*0.025;
+  var total=r1(Math.max(3,base+adj));
+  document.getElementById('result-total').textContent=fmt(total);
+  document.getElementById('result-range').textContent='Conservative '+fmt(r1(total*0.82))+' — Aggressive '+fmt(r1(total*1.23));
+}
+function _doReturn(){
+  var invest=parseInt(document.getElementById('sl-invest').value);
+  var gccRev=parseInt(document.getElementById('sl-gcc-rev').value);
+  var mult=parseInt(document.getElementById('sl-mult').value);
+  document.getElementById('out-invest').textContent='$'+invest+'M';
+  document.getElementById('out-gcc-rev').textContent='$'+gccRev+'M';
+  document.getElementById('out-mult').textContent=mult+'×';
+  document.getElementById('r-invest').textContent=invest;
+  var pwVal=2860;
+  var ret=r1((invest/pwVal)*(pwVal+gccRev*mult));
+  var multiple=r1(ret/invest);
+  var irr=ret>invest?Math.round((Math.pow(ret/invest,1/3)-1)*100):0;
+  document.getElementById('r-return').textContent=fmt(ret);
+  document.getElementById('r-irr').textContent=multiple.toFixed(1)+'× money · IRR ~'+irr+'% over 3 years';
+}
+document.addEventListener('DOMContentLoaded',function(){
+  ['sl-markets','sl-team','sl-runway','sl-courses'].forEach(function(id){
+    var el=document.getElementById(id);if(!el)return;
+    el.addEventListener('input',_doFunding);el.addEventListener('change',_doFunding);
+  });
+  ['sl-invest','sl-gcc-rev','sl-mult'].forEach(function(id){
+    var el=document.getElementById(id);if(!el)return;
+    el.addEventListener('input',_doReturn);el.addEventListener('change',_doReturn);
+  });
+  _doFunding();_doReturn();
+});
+</script>
+</body>
+</html>
